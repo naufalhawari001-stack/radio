@@ -2,25 +2,15 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
-
-// Inisialisasi Supabase Admin untuk manajemen file di Storage
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Gunakan Service Role Key agar bisa hapus file
-);
 
 /**
- * Fungsi untuk menambah berita baru
- * Otomatis mengatur status 'published' agar langsung muncul di homepage.
+ * Fungsi untuk menambah berita baru (Murni Prisma)
  */
 export async function addInfo(formData: FormData) {
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const category = formData.get("category") as string;
-  const thumbnail = formData.get("thumbnail") as string;
-  
-  // AMBIL STATUS DARI FORM: Default ke 'published' agar tidak repot buka Supabase
+  const thumbnail = formData.get("thumbnail") as string; // Sekarang simpan URL string saja
   const status = (formData.get("status") as string) || "published";
 
   const slug = title
@@ -36,13 +26,12 @@ export async function addInfo(formData: FormData) {
         content, 
         category, 
         thumbnail,
-        status, // 'published' atau 'draft'
-        is_active: true, // Wajib TRUE agar muncul di InfoSection
+        status,
+        is_active: true,
         excerpt: content.replace(/<[^>]*>?/gm, '').substring(0, 150) + "..." 
       }
     });
 
-    // Revalidate semua path agar konten segar
     revalidatePath("/admin/info");
     revalidatePath("/info");
     revalidatePath("/");
@@ -55,8 +44,7 @@ export async function addInfo(formData: FormData) {
 }
 
 /**
- * Fungsi Update berita lama
- * Menangani perubahan status dan pembersihan file lama.
+ * Fungsi Update berita (Tanpa Hapus File Supabase)
  */
 export async function updateInfo(id: string, formData: FormData) {
   const title = formData.get("title") as string;
@@ -65,25 +53,9 @@ export async function updateInfo(id: string, formData: FormData) {
   const thumbnail = formData.get("thumbnail") as string;
   const status = (formData.get("status") as string) || "published";
 
-  const slug = title
-    .toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-');
+  const slug = title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-');
 
   try {
-    const oldInfo = await prisma.info.findUnique({
-      where: { id },
-      select: { thumbnail: true }
-    });
-
-    // Hapus file lama jika antum upload thumbnail baru
-    if (thumbnail && oldInfo?.thumbnail && thumbnail !== oldInfo.thumbnail) {
-      const oldFileName = oldInfo.thumbnail.split('/').pop();
-      if (oldFileName) {
-        await supabaseAdmin.storage.from('thumbnails').remove([oldFileName]);
-      }
-    }
-
     await prisma.info.update({
       where: { id },
       data: {
@@ -91,8 +63,8 @@ export async function updateInfo(id: string, formData: FormData) {
         slug,
         content,
         category,
-        status, // Update status terbaru
-        thumbnail: thumbnail || oldInfo?.thumbnail,
+        status,
+        thumbnail,
         excerpt: content.replace(/<[^>]*>?/gm, '').substring(0, 150) + "..."
       }
     });
@@ -109,22 +81,10 @@ export async function updateInfo(id: string, formData: FormData) {
 }
 
 /**
- * Fungsi hapus berita beserta file fisiknya
+ * Fungsi hapus berita (Murni Database)
  */
 export async function deleteInfo(id: string) {
   try {
-    const info = await prisma.info.findUnique({
-      where: { id },
-      select: { thumbnail: true }
-    });
-
-    if (info?.thumbnail) {
-      const fileName = info.thumbnail.split('/').pop();
-      if (fileName) {
-        await supabaseAdmin.storage.from('thumbnails').remove([fileName]);
-      }
-    }
-
     await prisma.info.delete({
       where: { id }
     });
@@ -136,6 +96,6 @@ export async function deleteInfo(id: string) {
     return { success: true };
   } catch (error) {
     console.error("Gagal menghapus berita:", error);
-    return { success: false, error: "Gagal menghapus data dan file." };
+    return { success: false, error: "Gagal menghapus data." };
   }
 }
