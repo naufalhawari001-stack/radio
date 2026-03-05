@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Variabel Emerald untuk identitas pondok di Purwokerto */
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-600: #059669;
 }
 
 @theme inline {
@@ -22,5 +26,64 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  @apply antialiased;
+}
+
+/* --- REVISI LAYER COMPONENTS UNTUK TAILWIND V4 --- */
+@layer components {
+  /* Container Utama Editor agar membulat */
+  .quill {
+    @apply border-none bg-gray-50 rounded-[2rem] overflow-hidden transition-all duration-300;
+  }
+
+  /* Toolbar Editor: Tanda ! ditaruh di depan setiap class */
+  .ql-toolbar.ql-snow {
+    @apply !border-none !bg-emerald-50/80 !px-6 !py-4 !border-b !border-emerald-100;
+    border-radius: 2rem 2rem 0 0;
+  }
+
+  /* Area Ketik (Editor Container) */
+  .ql-container.ql-snow {
+    @apply !border-none !font-sans !text-sm !text-gray-800;
+    min-height: 250px;
+  }
+
+  /* Pengaturan Teks di dalam Editor */
+  .ql-editor {
+    @apply !p-8 !leading-relaxed !min-h-[250px];
+  }
+
+  /* Placeholder Text */
+  .ql-editor.ql-blank::before {
+    @apply !text-gray-400 !italic !left-8;
+  }
+
+  /* Interaksi Tombol Toolbar (Hover & Active) */
+  .ql-snow.ql-toolbar button:hover,
+  .ql-snow .ql-toolbar button:hover,
+  .ql-snow.ql-toolbar button.ql-active,
+  .ql-snow .ql-toolbar button.ql-active {
+    @apply !text-emerald-600;
+  }
+
+  .ql-snow.ql-toolbar button:hover .ql-stroke,
+  .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+    @apply !stroke-emerald-600;
+  }
+
+  .ql-snow.ql-toolbar button:hover .ql-fill,
+  .ql-snow.ql-toolbar button.ql-active .ql-fill {
+    @apply !fill-emerald-600;
+  }
+
+  /* Efek Fokus (Glow Emerald) saat mulai mengetik */
+  .quill:focus-within {
+    @apply !ring-4 !ring-emerald-100/50 !bg-white !shadow-xl !shadow-emerald-50/20;
+  }
+  
+  /* Reset border default Quill menggunakan CSS murni agar lebih aman */
+  .ql-snow, .ql-container.ql-snow, .ql-toolbar.ql-snow {
+    border: none !important;
+  }
 }
