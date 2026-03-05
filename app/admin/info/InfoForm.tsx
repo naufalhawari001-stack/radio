@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createBrowserClient } from "@supabase/ssr"; 
+// Hapus baris createBrowserClient @supabase/ssr di sini!
 import { addInfo } from "./actions";
-import RichTextEditor from "./RichTextEditor"; // Pastikan path impor sudah benar
+import RichTextEditor from "./RichTextEditor";
 
 export default function InfoForm() {
   const [uploading, setUploading] = useState(false);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 import { updateInfo } from "../../actions";
 import { useRouter } from "next/navigation";
 
